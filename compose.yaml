@@ -1,0 +1,65 @@
+services:
+  # 데이터베이스: MySQL 9.0
+  db:
+    image: mysql:9.0
+    container_name: tripe-db
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
+      MYSQL_DATABASE: travel_db
+      MYSQL_USER: ${DB_USER}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+    ports:
+      - "3306:3306"
+    volumes:
+      - ./mysql/data:/var/lib/mysql
+      - ./mysql/init:/docker-entrypoint-initdb.d # 초기 SQL 자동 실행용
+    networks:
+      - tripe-network
+    healthcheck:
+        # mysqladmin을 사용해 DB 엔진이 실제로 응답하는지 체크합니다.
+        test: [ "CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${DB_ROOT_PASSWORD}" ]
+        interval: 5s   # 5초마다 체크
+        timeout: 5s    # 5초 넘기면 실패
+        retries: 10    # 10번까지 재시도
+        start_period: 20s # 초기 구동 시 20초 정도는 에러로 치지 않고 기다려줌
+
+  # 백엔드: Spring Boot 4.0
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: tripe-backend
+    restart: on-failure
+    depends_on:
+      db:
+        condition: service_healthy # DB가 완전히 준비된 후 실행
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://db:3306/travel_db?serverTimezone=Asia/Seoul&allowPublicKeyRetrieval=true&useSSL=false
+      SPRING_DATASOURCE_USERNAME: ${DB_USER}
+      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
+      SPRING_AI_OPENAI_API_KEY: ${OPENAI_API_KEY} # AI 연동을 위한 키
+    ports:
+      - "8080:8080"
+    networks:
+      - tripe-network
+
+  # 프론트엔드: React (Vite)
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: tripe-frontend
+    ports:
+      - "5173:5173"
+    environment:
+      - VITE_API_URL=http://localhost:8080
+    networks:
+      - tripe-network
+
+networks:
+  tripe-network:
+    driver: bridge
+
+volumes:
+  mysql-data:
