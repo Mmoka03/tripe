@@ -12,7 +12,7 @@ if [ ! -d "$HOME/.sdkman" ]; then
     curl -s "https://get.sdkman.io" | bash
 fi
 source "$HOME/.sdkman/bin/sdkman-init.sh"
-sdk install java 21.0.2-amzn < /dev/null # 자동 설치용
+sdk install java 21.0.11-amzn < /dev/null # 자동 설치용
 
 # 3. NVM 설치 및 Node 24 세팅
 if [ ! -d "$HOME/.nvm" ]; then
@@ -31,13 +31,30 @@ if [ -f "./backend/gradlew" ]; then
     chmod +x ./backend/gradlew
 fi
 
-# 5. 환경 변수(.env) 자동 생성
+# 5. 환경 변수(.env.dev) 자동 생성
 if [ ! -f ".env" ]; then
     echo ".env 파일이 없어 기본 설정을 생성합니다..."
-    cat <<EOF > .env
+    cat <<EOF > .env.dev
+# DB 설정
 DB_ROOT_PASSWORD=00000000
+DB_NAME=travel_db
 DB_USER=tripe_user
 DB_PASSWORD=00000000
+DB_HOST_PORT=3306
+DB_CONTAINER_PORT=3306
+
+# AI 설정
+GEMINI_API_KEY=AIzaSyCcpGi16_hO8DZ9BkA63XvSfOGArf4NcFs
+GEMINI_LOCATION=us-central1
+GEMINI_PROJECT_ID=906198282349
+
+# local
+TRIPE_API_URL=http://localhost:8080
+FRONT_API_URL=http://localhost:5173
+VITE_HOST_PORT=5173
+VITE_CONTAINER_PORT=5173
+API_HOST_PORT=8080
+API_CONTAINER_PORT=8080
 EOF
     echo ".env 생성이 완료되었습니다."
 fi
