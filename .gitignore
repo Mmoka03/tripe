@@ -1,5 +1,9 @@
 backend/HELP.md
 .gradle
+.env.dev
+.env.prod
+/frontend/.env.development
+/frontend/.env.production
 build/
 !gradle/wrapper/gradle-wrapper.jar
 !**/src/main/**/build/
