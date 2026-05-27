@@ -8,7 +8,12 @@
 
 4. sh setup.sh 실행 (비밀번호 1회 입력 필요)
 
-5. 터미널 재시작 후 docker-compose up -d 입력
+5. 터미널 재시작 후 docker-compose --env-file .env.dev up -d 입력
+
+<h4>유의사항</h4>
+- .env.dev이 생성되어 있는지 확인
+- --env-file 옵션은 env 환경변수 지정 시 사용하는데 추후에 compose 파일을 dev와 prod로 구울 예정이기에 해당 부분은 변경될 예정이다.
+- front도 현재 env 파일을 development와 production으로 구분중이다.
 
 <h3>커밋 규칙</h3>
 <table border=1>

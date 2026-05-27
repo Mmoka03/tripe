@@ -1,3 +1,5 @@
+# TODO: 추후에 dev, prod로 분리
+
 services:
   # 데이터베이스: MySQL 9.0
   db:
@@ -6,11 +8,11 @@ services:
     restart: always
     environment:
       MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
-      MYSQL_DATABASE: travel_db
+      MYSQL_DATABASE: ${DB_NAME}
       MYSQL_USER: ${DB_USER}
       MYSQL_PASSWORD: ${DB_PASSWORD}
     ports:
-      - "3306:3306"
+      - "${DB_HOST_PORT}:${DB_CONTAINER_PORT}"
     volumes:
       - ./mysql/data:/var/lib/mysql
       - ./mysql/init:/docker-entrypoint-initdb.d # 초기 SQL 자동 실행용
@@ -33,14 +35,17 @@ services:
     restart: on-failure
     depends_on:
       db:
-        condition: service_healthy # DB가 완전히 준비된 후 실행
+        condition: service_healthy
     environment:
-      SPRING_DATASOURCE_URL: jdbc:mysql://db:3306/travel_db?serverTimezone=Asia/Seoul&allowPublicKeyRetrieval=true&useSSL=false
+      SPRING_PROFILES_ACTIVE: dev # 로컬: dev, 실환경: prod
+      SPRING_DATASOURCE_URL: jdbc:mysql://db:${DB_CONTAINER_PORT}/${DB_NAME}?serverTimezone=Asia/Seoul&allowPublicKeyRetrieval=true&useSSL=false
       SPRING_DATASOURCE_USERNAME: ${DB_USER}
       SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
-      SPRING_AI_OPENAI_API_KEY: ${OPENAI_API_KEY} # AI 연동을 위한 키
+      GEMINI_API_KEY: ${GEMINI_API_KEY}
+      GEMINI_LOCATION: ${GEMINI_LOCATION}
+      GEMINI_PROJECT_ID: ${GEMINI_PROJECT_ID}
     ports:
-      - "8080:8080"
+      - "${API_HOST_PORT}:${API_CONTAINER_PORT}"
     networks:
       - tripe-network
 
@@ -51,11 +56,13 @@ services:
       dockerfile: Dockerfile
     container_name: tripe-frontend
     ports:
-      - "5173:5173"
+      - "${VITE_HOST_PORT}:${VITE_CONTAINER_PORT}"
     environment:
-      - VITE_API_URL=http://localhost:8080
+      TRIPE_API_URL: ${TRIPE_API_URL}
     networks:
       - tripe-network
+    volumes:
+      - ./frontend:/app
 
 networks:
   tripe-network:
